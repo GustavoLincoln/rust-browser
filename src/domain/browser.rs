@@ -1,7 +1,6 @@
 #[derive(Default)]
 pub struct BrowserState {
     pub current_url: String,
-    pub is_private: bool,
 }
 
 pub struct Browser {
@@ -16,9 +15,5 @@ impl Browser {
     pub fn navigate(&mut self, url: &str) {
         self.state.current_url.clear();
         self.state.current_url.push_str(url);
-    }
-
-    pub fn state(&self) -> &BrowserState {
-        &self.state
     }
 }

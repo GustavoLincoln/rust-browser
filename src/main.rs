@@ -7,9 +7,8 @@ use application::browser_service::BrowserService;
 
 fn main() {
     let blocklist_path = "blocklist.txt";
-    let storage_path = "target/browser-data";
 
-    match BrowserService::bootstrap(blocklist_path, storage_path) {
+    match BrowserService::bootstrap(blocklist_path) {
         Ok(mut service) => {
             let urls = [
                 "https://google.com",
