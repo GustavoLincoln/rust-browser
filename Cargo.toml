@@ -1,0 +1,10 @@
+[package]
+name = "rust-browser"
+version = "0.1.0"
+edition = "2021"
+description = "A lightweight, privacy-focused browser with ad-blocking"
+license = "MIT"
+
+[dependencies]
+sled = "0.34.7"
+url = "2.5.0"

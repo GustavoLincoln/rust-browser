@@ -1,0 +1,10 @@
+G:\PROJETOS\rust-browser\target\debug\deps\windows_tokens-b61d7521857adebf.d: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\to_tokens.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\token_stream.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\runtime.rs
+
+G:\PROJETOS\rust-browser\target\debug\deps\libwindows_tokens-b61d7521857adebf.rlib: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\to_tokens.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\token_stream.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\runtime.rs
+
+G:\PROJETOS\rust-browser\target\debug\deps\libwindows_tokens-b61d7521857adebf.rmeta: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\to_tokens.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\token_stream.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\runtime.rs
+
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\lib.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\to_tokens.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\token_stream.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-tokens-0.42.0\src\runtime.rs:

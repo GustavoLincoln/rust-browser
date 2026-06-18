@@ -1,0 +1,10 @@
+G:\PROJETOS\rust-browser\target\debug\deps\clipboard-767f83b0827a6db2.d: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\common.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\windows_clipboard.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\nop_clipboard.rs
+
+G:\PROJETOS\rust-browser\target\debug\deps\libclipboard-767f83b0827a6db2.rlib: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\common.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\windows_clipboard.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\nop_clipboard.rs
+
+G:\PROJETOS\rust-browser\target\debug\deps\libclipboard-767f83b0827a6db2.rmeta: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\common.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\windows_clipboard.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\nop_clipboard.rs
+
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\lib.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\common.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\windows_clipboard.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clipboard-0.3.0\src\nop_clipboard.rs:

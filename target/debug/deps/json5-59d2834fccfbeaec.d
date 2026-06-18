@@ -1,0 +1,11 @@
+G:\PROJETOS\rust-browser\target\debug\deps\json5-59d2834fccfbeaec.d: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\de.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\error.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\ser.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src/json5.pest
+
+G:\PROJETOS\rust-browser\target\debug\deps\libjson5-59d2834fccfbeaec.rlib: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\de.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\error.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\ser.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src/json5.pest
+
+G:\PROJETOS\rust-browser\target\debug\deps\libjson5-59d2834fccfbeaec.rmeta: C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\lib.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\de.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\error.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\ser.rs C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src/json5.pest
+
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\lib.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\de.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\error.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src\ser.rs:
+C:\Users\gustavo.lincoln\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\json5-0.4.1\src/json5.pest:
