@@ -10,13 +10,6 @@ pub struct FileBlocklistPolicy {
 }
 
 impl FileBlocklistPolicy {
-    pub fn from_file(path: &str) -> Result<Self, String> {
-        let content = std::fs::read_to_string(path).map_err(|error| error.to_string())?;
-        Ok(Self {
-            blocklist: Blocklist::from_text(&content),
-        })
-    }
-
     pub fn from_sources(
         loader: &BlocklistSourceLoader,
         local_path: &str,

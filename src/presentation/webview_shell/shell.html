@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rust Browser Shell</title>
+    <style>
+      :root {{
+        --header-height: {header_height}px;
+        --sidebar-width: {sidebar_width}px;
+        --settings-panel-width: {settings_panel_width}px;
+        --content-gap: 18px;
+        --sand: #f4eee4;
+        --paper: #fcf8f1;
+        --panel: #e6d8c3;
+        --ink: #1f2933;
+        --muted: #5f6b76;
+        --success: #2f7e60;
+        --warning: #aa6b22;
+        --info: #586785;
+        --border: rgba(31, 41, 51, 0.08);
+      }}
+      * {{ box-sizing: border-box; }}
+      body {{
+        margin: 0;
+        font-family: "Segoe UI", "Aptos", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(242, 215, 160, 0.45), transparent 36%),
+          linear-gradient(180deg, #f9f2e8 0%, #f5efe6 58%, #efe4d4 100%);
+        overflow: hidden;
+      }}
+      .sr-only {{
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+      }}
+      header {{
+        position: fixed; inset: 0 0 auto 0; height: var(--header-height);
+        padding: 10px 18px 14px; border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(12px); background: rgba(252, 248, 241, 0.9); z-index: 10;
+      }}
+      .tabstrip-shell {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; margin-bottom: 10px; }}
+      .tabstrip {{ display: flex; gap: 10px; align-items: end; min-width: 0; overflow-x: auto; padding-bottom: 2px; }}
+      .tab {{
+        position: relative;
+        min-width: 220px; max-width: 320px; padding: 10px 14px; border-radius: 16px 16px 0 0;
+        border: 1px solid rgba(31, 41, 51, 0.08); border-bottom: 0;
+        background: rgba(230, 216, 195, 0.72); box-shadow: inset 0 -1px 0 rgba(31, 41, 51, 0.04);
+        text-align: left;
+      }}
+      .tab.active {{ background: rgba(255, 255, 255, 0.76); }}
+      .tab-close {{
+        position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; padding: 0;
+        border-radius: 999px; background: rgba(31, 41, 51, 0.08); color: var(--ink);
+      }}
+      .tab-title {{
+        max-width: calc(100% - 30px);
+        font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }}
+      .tab-url {{
+        margin-top: 4px; font-size: 11px; color: var(--muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }}
+      .tab-action {{
+        width: 44px; padding: 0; font-size: 22px; line-height: 1;
+      }}
+      .toolbar {{
+        display: grid; grid-template-columns: auto auto auto minmax(280px, 1fr) auto auto;
+        gap: 10px; align-items: center;
+      }}
+      .toolbar-group {{ display: contents; }}
+      input {{
+        width: 100%; height: 44px; padding: 0 16px; border: 1px solid rgba(95, 107, 118, 0.16);
+        border-radius: 999px; font-size: 15px; background: rgba(255, 255, 255, 0.85);
+      }}
+      input:focus-visible, button:focus-visible, .history-item:focus-visible, .profile-chip:focus-visible {{
+        outline: 2px solid rgba(61, 90, 136, 0.8); outline-offset: 2px;
+      }}
+      button {{
+        height: 44px; border: 0; padding: 0 18px; border-radius: 999px; font-weight: 600; cursor: pointer;
+        color: white; background: linear-gradient(135deg, #3d5a88, #26416c);
+      }}
+      button.alt {{ color: var(--ink); background: rgba(31, 41, 51, 0.08); }}
+      button:disabled, input:disabled {{ opacity: 0.55; cursor: not-allowed; }}
+      .status {{
+        margin-top: 12px; border-radius: 14px; padding: 10px 14px; font-size: 14px; font-weight: 600;
+        background: rgba(88, 103, 133, 0.12); color: var(--info);
+      }}
+      .status.success {{ background: rgba(47, 126, 96, 0.12); color: var(--success); }}
+      .status.warning {{ background: rgba(170, 107, 34, 0.14); color: var(--warning); }}
+      .status.loading {{ background: rgba(88, 103, 133, 0.16); color: var(--info); }}
+      .progress {{
+        margin-top: 10px; height: 3px; border-radius: 999px; background: rgba(31, 41, 51, 0.08);
+        overflow: hidden; opacity: 0; transition: opacity 0.2s ease;
+      }}
+      .progress.visible {{ opacity: 1; }}
+      .progress > span {{
+        display: block; width: 38%; height: 100%; border-radius: inherit;
+        background: linear-gradient(90deg, #3d5a88, #6e88b4); animation: loading 1.2s linear infinite;
+      }}
+      @keyframes loading {{ from {{ transform: translateX(-120%); }} to {{ transform: translateX(320%); }} }}
+      .card {{
+        background: rgba(252, 248, 241, 0.78); border: 1px solid rgba(31, 41, 51, 0.08);
+        border-radius: 18px; padding: 16px; box-shadow: 0 18px 40px rgba(61, 48, 32, 0.08);
+      }}
+      .card + .card {{ margin-top: 14px; }}
+      h1, h2, h3, p {{ margin: 0; }}
+      h1 {{ font-size: 18px; margin-bottom: 6px; }}
+      h2 {{
+        font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+        margin-bottom: 12px;
+      }}
+      .muted {{ color: var(--muted); font-size: 13px; line-height: 1.5; }}
+      .history-item {{
+        display: block; width: 100%; margin-top: 8px; padding: 12px 14px; border: 0; text-align: left;
+        color: var(--ink); background: rgba(255, 255, 255, 0.66);
+      }}
+      .history-item:hover {{ background: rgba(255, 255, 255, 0.94); }}
+      .profile-row {{ display: flex; gap: 8px; margin-top: 12px; }}
+      .profile-chip {{
+        flex: 1; height: 36px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(31, 41, 51, 0.08);
+        font-size: 12px; color: var(--ink); background: rgba(255, 255, 255, 0.72);
+      }}
+      .profile-chip.active {{ color: white; background: linear-gradient(135deg, #3d5a88, #26416c); }}
+      .icon-button {{
+        height: 36px; padding: 0 14px; border-radius: 999px; border: 0; cursor: pointer;
+        color: var(--ink); background: rgba(31, 41, 51, 0.08);
+      }}
+      .settings-panel {{
+        position: fixed;
+        top: calc(var(--header-height) + 12px);
+        right: 14px;
+        bottom: 14px;
+        width: min(var(--settings-panel-width), calc(100vw - 28px));
+        opacity: 0;
+        transform: translateX(24px);
+        pointer-events: none;
+        transition: transform 0.22s ease, opacity 0.22s ease;
+      }}
+      .settings-panel.open {{
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }}
+      .settings-shell {{
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        border: 1px solid rgba(31, 41, 51, 0.08);
+        border-radius: 24px;
+        background: rgba(244, 238, 228, 0.96);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 26px 60px rgba(31, 41, 51, 0.18);
+      }}
+      .settings-header {{
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }}
+      .settings-kicker {{
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--info);
+        margin-bottom: 4px;
+      }}
+      .settings-title {{
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.25;
+      }}
+      .settings-grid {{
+        overflow: auto;
+        padding-right: 2px;
+      }}
+      .settings-tabs {{
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }}
+      .settings-tab {{
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: rgba(31, 41, 51, 0.08);
+        color: var(--ink);
+      }}
+      .settings-tab.active {{
+        color: white;
+        background: linear-gradient(135deg, #3d5a88, #26416c);
+      }}
+      .settings-view.is-hidden {{
+        display: none;
+      }}
+      main {{
+        position: fixed; inset: var(--header-height) 0 0 var(--sidebar-width); pointer-events: none;
+        padding: var(--content-gap);
+      }}
+      .frame-label {{
+        position: absolute; top: 16px; left: 18px; border-radius: 999px; padding: 8px 12px; font-size: 12px;
+        letter-spacing: 0.08em; text-transform: uppercase; color: rgba(31, 41, 51, 0.75);
+        background: rgba(255, 255, 255, 0.56); backdrop-filter: blur(10px);
+      }}
+      .section {{ margin-top: 14px; }}
+      .section h3 {{ margin-bottom: 8px; font-size: 15px; }}
+      .section p {{ font-size: 13px; line-height: 1.55; color: var(--muted); white-space: pre-wrap; }}
+      @media (max-width: 1180px) {{
+        header {{ padding-inline: 14px; }}
+        .toolbar {{ grid-template-columns: repeat(3, auto) minmax(180px, 1fr) auto auto; gap: 8px; }}
+        .tab {{ min-width: 180px; }}
+      }}
+      @media (max-width: 980px) {{
+        :root {{ --sidebar-width: 0px; --header-height: 132px; }}
+        .toolbar {{ grid-template-columns: repeat(3, auto); }}
+        .toolbar .address-shell {{ grid-column: 1 / -1; order: 2; }}
+        .toolbar .action-shell {{ justify-self: stretch; }}
+        main {{ inset-inline-start: 0; }}
+        .settings-panel {{
+          top: calc(var(--header-height) + 8px);
+          right: 8px;
+          left: 8px;
+          width: auto;
+          bottom: 8px;
+        }}
+      }}
+    </style>
+  </head>
+  <body>
+    <header>
+      {tabstrip}
+      {toolbar}
+      <div id="status" class="status" role="status" aria-live="polite">Ready.</div>
+      <div id="progress" class="progress"><span></span></div>
+    </header>
+    {settings_panel}
+    <main>
+      <div class="frame-label">Embedded WebView2 Content</div>
+    </main>
+    <script>
+      const state = {{ history: [], sections: [] }};
+      const address = document.getElementById("address");
+      const tabs = document.getElementById("tabs");
+      const newTabButton = document.getElementById("new-tab-button");
+      const backButton = document.getElementById("back-button");
+      const forwardButton = document.getElementById("forward-button");
+      const homeButton = document.getElementById("home-button");
+      const openButton = document.getElementById("open-button");
+      const reloadButton = document.getElementById("reload-button");
+      const settingsButton = document.getElementById("settings-button");
+      const closeSettingsButton = document.getElementById("close-settings-button");
+      const settingsPanel = document.getElementById("settings-panel");
+      const progress = document.getElementById("progress");
+      const status = document.getElementById("status");
+      const pageTitle = document.getElementById("page-title");
+      const currentUrl = document.getElementById("current-url");
+      const pageMeta = document.getElementById("page-meta");
+      const pageSummary = document.getElementById("page-summary");
+      const history = document.getElementById("history");
+      const sections = document.getElementById("sections");
+      const profileButtons = {{
+        Light: document.getElementById("profile-light"),
+        Normal: document.getElementById("profile-normal"),
+        Pro: document.getElementById("profile-pro")
+      }};
+      const settingsTabButtons = {{
+        security: document.getElementById("settings-tab-security"),
+        history: document.getElementById("settings-tab-history"),
+        preview: document.getElementById("settings-tab-preview")
+      }};
+      const settingsViews = Array.from(document.querySelectorAll("[data-settings-view]"));
+
+      function post(message) {{ window.ipc.postMessage(message); }}
+
+      function renderTabs(items, activeTabId) {{
+        tabs.innerHTML = "";
+        items.forEach((tab) => {{
+          const button = document.createElement("button");
+          button.className = "tab" + (tab.id === activeTabId ? " active" : "");
+          button.type = "button";
+          button.setAttribute("role", "tab");
+          button.setAttribute("aria-selected", String(tab.id === activeTabId));
+          button.setAttribute("tabindex", tab.id === activeTabId ? "0" : "-1");
+
+          const title = document.createElement("div");
+          title.className = "tab-title";
+          title.textContent = tab.title || "New Tab";
+
+          const url = document.createElement("div");
+          url.className = "tab-url";
+          url.textContent = tab.url || "about:blank";
+
+          button.appendChild(title);
+          button.appendChild(url);
+          button.addEventListener("click", () => post("tab:switch:" + tab.id));
+
+          if (items.length > 1) {{
+            const close = document.createElement("button");
+            close.className = "tab-close";
+            close.type = "button";
+            close.textContent = "x";
+            close.setAttribute("aria-label", "Close tab");
+            close.addEventListener("click", (event) => {{
+              event.stopPropagation();
+              post("tab:close:" + tab.id);
+            }});
+            button.appendChild(close);
+          }}
+
+          tabs.appendChild(button);
+        }});
+      }}
+
+      function renderHistory(items) {{
+        history.innerHTML = "";
+        if (!items.length) {{
+          const empty = document.createElement("p");
+          empty.className = "muted";
+          empty.textContent = "History is empty.";
+          history.appendChild(empty);
+          return;
+        }}
+        items.forEach((url) => {{
+          const button = document.createElement("button");
+          button.className = "history-item";
+          button.textContent = url;
+          button.addEventListener("click", () => {{
+            address.value = url;
+            post("navigate:" + url);
+          }});
+          history.appendChild(button);
+        }});
+      }}
+
+      function renderSections(items) {{
+        sections.innerHTML = "";
+        if (!items.length) {{
+          const empty = document.createElement("p");
+          empty.className = "muted";
+          empty.textContent = "No preview sections available for this page yet.";
+          sections.appendChild(empty);
+          return;
+        }}
+        items.forEach((section) => {{
+          const wrapper = document.createElement("div");
+          wrapper.className = "section";
+          if (section.heading) {{
+            const heading = document.createElement("h3");
+            heading.textContent = section.heading;
+            wrapper.appendChild(heading);
+          }}
+          const body = document.createElement("p");
+          body.textContent = section.body;
+          wrapper.appendChild(body);
+          sections.appendChild(wrapper);
+        }});
+      }}
+
+      function sendNavigate() {{
+        const url = address.value.trim();
+        if (!url) return;
+        post("navigate:" + url);
+      }}
+
+      openButton.addEventListener("click", sendNavigate);
+      newTabButton.addEventListener("click", () => post("tab:new"));
+      backButton.addEventListener("click", () => post("back"));
+      forwardButton.addEventListener("click", () => post("forward"));
+      homeButton.addEventListener("click", () => {{
+        address.value = "https://www.rust-lang.org";
+        sendNavigate();
+      }});
+      reloadButton.addEventListener("click", () => post("reload"));
+      settingsButton.addEventListener("click", () => post("settings:toggle"));
+      closeSettingsButton.addEventListener("click", () => post("settings:close"));
+      Object.entries(profileButtons).forEach(([name, button]) => {{
+        button.addEventListener("click", () => post("profile:" + name.toLowerCase()));
+      }});
+      Object.entries(settingsTabButtons).forEach(([name, button]) => {{
+        button.addEventListener("click", () => post("settings-tab:" + name));
+      }});
+      address.addEventListener("keydown", (event) => {{
+        if (event.key === "Enter") {{
+          sendNavigate();
+        }}
+      }});
+
+      window.rustBrowserUpdate = function(next) {{
+        Object.assign(state, next);
+        address.value = state.address_input || "";
+        pageTitle.textContent = state.page_title || "Rust Browser";
+        currentUrl.textContent = state.current_url || state.pending_url || "No page loaded yet.";
+        pageMeta.textContent = state.page_meta || "";
+        pageSummary.textContent = state.page_summary || "No preview available.";
+        status.textContent = state.status.message;
+        status.className = "status " + state.status.kind + (state.is_loading ? " loading" : "");
+        progress.className = state.is_loading ? "progress visible" : "progress";
+        settingsPanel.className = state.is_settings_open ? "settings-panel open" : "settings-panel";
+        settingsPanel.setAttribute("aria-hidden", String(!state.is_settings_open));
+        openButton.disabled = !!state.is_loading;
+        address.disabled = !!state.is_loading;
+        backButton.disabled = !!state.is_loading;
+        forwardButton.disabled = !!state.is_loading;
+        homeButton.disabled = !!state.is_loading;
+        settingsButton.disabled = !!state.is_loading;
+        newTabButton.disabled = !!state.is_loading;
+        Object.entries(profileButtons).forEach(([name, button]) => {{
+          button.disabled = !!state.is_loading;
+          button.className = "profile-chip" + (state.selected_profile === name ? " active" : "");
+          button.setAttribute("aria-pressed", String(state.selected_profile === name));
+        }});
+        Object.entries(settingsTabButtons).forEach(([name, button]) => {{
+          button.className = "settings-tab" + (state.selected_settings_tab === name ? " active" : "");
+          button.setAttribute("aria-selected", String(state.selected_settings_tab === name));
+        }});
+        settingsViews.forEach((view) => {{
+          const visible = view.dataset.settingsView === state.selected_settings_tab;
+          view.className = visible ? "settings-view" : "settings-view is-hidden";
+        }});
+        renderTabs(state.tabs || [], state.active_tab_id);
+        renderHistory(state.history || []);
+        renderSections(state.sections || []);
+      }};
+    </script>
+  </body>
+</html>

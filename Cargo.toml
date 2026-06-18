@@ -10,6 +10,10 @@ reqwest = { version = "0.12.24", default-features = false, features = ["blocking
 scraper = "0.24.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
+slint = { version = "1", features = ["unstable-winit-030"] }
 url = "2.5.0"
 winit = "0.30.13"
 wry = "0.55.1"
+
+[build-dependencies]
+slint-build = "1"

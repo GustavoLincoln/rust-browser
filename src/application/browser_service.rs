@@ -27,6 +27,10 @@ impl BrowserService {
         self.browser.navigate(url);
     }
 
+    pub fn replace_policy(&mut self, url_policy: FileBlocklistPolicy) {
+        self.url_policy = url_policy;
+    }
+
     pub fn url_policy(&self) -> FileBlocklistPolicy {
         self.url_policy.clone()
     }

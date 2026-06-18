@@ -1,0 +1,361 @@
+import { Button, LineEdit, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    in property <string> window_title: "Rust Browser";
+    in property <string> address_value: "";
+    in property <string> active_tab_title: "New Tab";
+    in property <string> active_tab_url: "about:blank";
+    in property <string> selected_profile: "Normal";
+    in property <string> active_settings_tab: "security";
+    in property <string> status_message: "Ready";
+    in property <string> page_title: "Rust Browser";
+    in property <string> current_url: "No page loaded yet.";
+    in property <string> page_meta: "";
+    in property <string> page_summary: "";
+    in property <string> history_text: "History is empty.";
+    in property <string> preview_text: "No preview sections available for this page yet.";
+    in property <bool> options_open: false;
+    in property <bool> is_loading: false;
+
+    callback navigate(string);
+    callback go_back();
+    callback go_forward();
+    callback reload_page();
+    callback open_options();
+    callback close_options();
+    callback create_tab();
+    callback minimize_window();
+    callback maximize_window();
+    callback close_window();
+    callback select_profile(string);
+    callback select_settings_tab(string);
+
+    title: window_title;
+    width: 1440px;
+    height: 920px;
+    background: #f5efe6;
+
+    Rectangle {
+        background: #f5efe6;
+
+        VerticalBox {
+            spacing: 0px;
+
+            Rectangle {
+                height: 108px;
+                background: #fcf8f1;
+                border-color: #d9ccb9;
+                border-width: 1px;
+
+                VerticalBox {
+                    padding-top: 10px;
+                    padding-bottom: 12px;
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    spacing: 10px;
+
+                    HorizontalBox {
+                        spacing: 10px;
+
+                        Rectangle {
+                            background: #ffffff;
+                            border-radius: 14px;
+                            min-width: 300px;
+                            horizontal-stretch: 1;
+
+                            HorizontalBox {
+                                padding-left: 14px;
+                                padding-right: 10px;
+                                padding-top: 8px;
+                                padding-bottom: 8px;
+                                spacing: 8px;
+
+                                VerticalBox {
+                                    spacing: 2px;
+                                    Text {
+                                        text: active_tab_title;
+                                        color: #1f2933;
+                                        font-size: 13px;
+                                        font-weight: 700;
+                                    }
+                                    Text {
+                                        text: active_tab_url;
+                                        color: #5f6b76;
+                                        font-size: 11px;
+                                    }
+                                }
+                            }
+                        }
+
+                        Button {
+                            text: "+";
+                            min-width: 44px;
+                            clicked => { root.create_tab(); }
+                        }
+
+                        HorizontalBox {
+                            spacing: 6px;
+
+                            Button {
+                                text: "_";
+                                min-width: 44px;
+                                clicked => { root.minimize_window(); }
+                            }
+
+                            Button {
+                                text: "[ ]";
+                                min-width: 44px;
+                                clicked => { root.maximize_window(); }
+                            }
+
+                            Button {
+                                text: "X";
+                                min-width: 44px;
+                                clicked => { root.close_window(); }
+                            }
+                        }
+                    }
+
+                    HorizontalBox {
+                        spacing: 10px;
+
+                        Button {
+                            text: "<";
+                            enabled: !is_loading;
+                            min-width: 52px;
+                            clicked => { root.go_back(); }
+                        }
+
+                        Button {
+                            text: ">";
+                            enabled: !is_loading;
+                            min-width: 52px;
+                            clicked => { root.go_forward(); }
+                        }
+
+                        LineEdit {
+                            text: address_value;
+                            enabled: !is_loading;
+                            horizontal-stretch: 1;
+                            accepted => { root.navigate(self.text); }
+                        }
+
+                        Button {
+                            text: "Reload";
+                            enabled: !is_loading;
+                            clicked => { root.reload_page(); }
+                        }
+
+                        Button {
+                            text: options_open ? "Close" : "Options";
+                            clicked => {
+                                if (options_open) {
+                                    root.close_options();
+                                } else {
+                                    root.open_options();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 40px;
+                background: #f4eee4;
+                border-color: #d9ccb9;
+                border-width: 1px;
+
+                Text {
+                    x: 16px;
+                    y: 12px;
+                    text: status_message;
+                    color: #1f2933;
+                    font-size: 13px;
+                }
+            }
+        }
+
+        if options_open : Rectangle {
+            x: self.width - 392px;
+            y: 120px;
+            width: 378px;
+            height: parent.height - 134px;
+            background: #f4eee4;
+            border-radius: 22px;
+            border-color: #d9ccb9;
+            border-width: 1px;
+
+            VerticalBox {
+                padding: 16px;
+                spacing: 12px;
+
+                HorizontalBox {
+                    spacing: 10px;
+
+                    VerticalBox {
+                        spacing: 4px;
+                        Text {
+                            text: "Browser Options";
+                            color: #586785;
+                            font-size: 11px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: "Privacy, navigation, and diagnostics";
+                            color: #1f2933;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+                    }
+
+                    Button {
+                        text: "Close";
+                        clicked => { root.close_options(); }
+                    }
+                }
+
+                HorizontalBox {
+                    spacing: 8px;
+
+                    Button {
+                        text: "Security";
+                        clicked => { root.select_settings_tab("security"); }
+                    }
+
+                    Button {
+                        text: "History";
+                        clicked => { root.select_settings_tab("history"); }
+                    }
+
+                    Button {
+                        text: "Preview";
+                        clicked => { root.select_settings_tab("preview"); }
+                    }
+                }
+
+                if active_settings_tab == "security" : Rectangle {
+                    background: #fcf8f1;
+                    border-radius: 18px;
+                    border-color: #d9ccb9;
+                    border-width: 1px;
+
+                    VerticalBox {
+                        padding: 14px;
+                        spacing: 10px;
+
+                        Text {
+                            text: "Current Page";
+                            color: #5f6b76;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: page_title;
+                            color: #1f2933;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: current_url;
+                            color: #5f6b76;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: page_meta;
+                            color: #5f6b76;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: "Protection Profile";
+                            color: #5f6b76;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+
+                        HorizontalBox {
+                            spacing: 8px;
+
+                            Button {
+                                text: "Light";
+                                clicked => { root.select_profile("light"); }
+                            }
+                            Button {
+                                text: "Normal";
+                                clicked => { root.select_profile("normal"); }
+                            }
+                            Button {
+                                text: "Pro";
+                                clicked => { root.select_profile("pro"); }
+                            }
+                        }
+
+                        Text {
+                            text: "Selected: " + selected_profile;
+                            color: #1f2933;
+                            font-size: 12px;
+                        }
+                    }
+                }
+
+                if active_settings_tab == "history" : Rectangle {
+                    background: #fcf8f1;
+                    border-radius: 18px;
+                    border-color: #d9ccb9;
+                    border-width: 1px;
+
+                    VerticalBox {
+                        padding: 14px;
+                        spacing: 10px;
+
+                        Text {
+                            text: "History";
+                            color: #5f6b76;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: history_text;
+                            color: #1f2933;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+
+                if active_settings_tab == "preview" : Rectangle {
+                    background: #fcf8f1;
+                    border-radius: 18px;
+                    border-color: #d9ccb9;
+                    border-width: 1px;
+
+                    VerticalBox {
+                        padding: 14px;
+                        spacing: 10px;
+
+                        Text {
+                            text: "Readable Preview";
+                            color: #5f6b76;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                        Text {
+                            text: page_summary;
+                            color: #1f2933;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                        Text {
+                            text: preview_text;
+                            color: #5f6b76;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
