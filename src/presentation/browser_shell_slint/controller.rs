@@ -200,6 +200,15 @@ impl BrowserShellSlintController {
             active_tab_title: input.page_title.clone(),
             active_tab_url: active_url.clone(),
         };
+        let preview_sections = input
+            .sections
+            .iter()
+            .map(|section| PreviewSectionViewModel {
+                heading: section.heading.clone(),
+                body: section.body.clone(),
+            })
+            .collect::<Vec<_>>();
+
         self.view_model.options_dialog = OptionsDialogViewModel {
             is_open: input.is_settings_open,
             active_section: input.selected_settings_tab,
@@ -209,14 +218,7 @@ impl BrowserShellSlintController {
             page_meta: input.page_meta,
             page_summary: input.page_summary,
             history: input.history.clone(),
-            preview_sections: input
-                .sections
-                .into_iter()
-                .map(|section| PreviewSectionViewModel {
-                    heading: section.heading,
-                    body: section.body,
-                })
-                .collect::<Vec<_>>(),
+            preview_sections,
             history_text: if input.history.is_empty() {
                 "History is empty.".to_string()
             } else {

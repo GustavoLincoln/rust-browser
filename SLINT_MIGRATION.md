@@ -36,7 +36,7 @@ src/
 - Introduce a Slint host window for the browser chrome.
 - Keep the current Rust event/controller logic.
 - Replicate the toolbar, tab strip, status bar, and options dialog in Slint.
-- Status: `build.rs` now compiles a real `AppWindow` Slint view, with a single-row browser chrome layout for tabs, toolbar, and window controls, plus a controller view model and runtime-state adapter fed by the production `runner`, while the production shell remains on `wry + WebView2`.
+- Status: `build.rs` now compiles a real `AppWindow` Slint view, and the production `runner` uses that Slint window as the host for the top chrome while `WebView2` is embedded below it as native content. The old HTML shell is no longer the primary chrome layer.
 
 ### Phase 2
 

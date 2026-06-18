@@ -30,9 +30,8 @@ src/
       controller.rs             # Future bridge between app state and Slint callbacks
       mod.rs                    # Slint presentation entrypoint
     webview_shell/
-      components.rs              # Reusable HTML component builders for the shell UI
-      templates.rs               # Page templates and assembled shell HTML
-      runner.rs                  # Native window, WebView2 integration, tabs, state and events
+      templates.rs               # Placeholder and blocked page templates for the embedded content
+      runner.rs                  # Slint-hosted window, WebView2 integration, tabs, state and events
   main.rs                 # Composition root
 build.rs                  # Compiles Slint UI definitions into Rust types
 SLINT_MIGRATION.md        # Incremental plan for moving browser chrome to Slint
@@ -40,13 +39,11 @@ SLINT_MIGRATION.md        # Incremental plan for moving browser chrome to Slint
 
 ## Shell component architecture
 
-- `components.rs` owns reusable UI primitives such as `render_tab_strip(...)`, `render_toolbar(...)`, `render_toolbar_button(...)`, `render_profile_selector(...)`, and `render_card(...)`.
-- `templates.rs` assembles those components into `shell_html()` and owns the auxiliary page templates used for placeholder and blocked states.
-- `runner.rs` now focuses on runtime state, browser events, per-tab state, blocklist switching, and communication between Rust and the shell UI.
-- The permanent sidebar was replaced by a top-triggered options panel with internal tabs: `Security`, `History`, and `Preview`.
-- `browser_shell_slint/` is the incremental migration boundary where the native shell will move next, without changing the browser engine.
-- `browser_shell_slint/controller.rs` now receives a synchronized runtime snapshot for the toolbar, tab strip, status, and options dialog, so the future Slint UI already shares the same source of truth as the current HTML shell.
-- `build.rs` and `browser_shell_slint/bridge.rs` make the Slint top chrome part of the real build pipeline, even before it replaces the HTML shell on screen.
+- `browser_shell_slint/app_window.slint` now owns the visible browser chrome: top bar, address/navigation controls, window actions, status bar, and options panel.
+- `browser_shell_slint/controller.rs` is the shared UI view model boundary between runtime state and Slint properties/callbacks.
+- `browser_shell_slint/bridge.rs` applies the runtime snapshot to the generated Slint component and converts Slint callbacks into browser actions.
+- `webview_shell/runner.rs` now focuses on runtime state, browser events, per-tab state, blocklist switching, and hosting the `WebView2` child inside the Slint-managed native window.
+- `webview_shell/templates.rs` remains only for auxiliary embedded content pages such as placeholder and blocked states.
 
 ## Responsibilities
 

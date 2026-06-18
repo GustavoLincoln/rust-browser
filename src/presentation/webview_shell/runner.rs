@@ -2,6 +2,7 @@ use crate::application::browser_service::{normalize_user_url, BrowserService, Na
 use crate::application::ports::PageLoader;
 use crate::application::runtime::{build_blocklist_policy, save_app_settings, RuntimeConfig};
 use crate::domain::blocklist_profile::BlocklistProfile;
+use crate::domain::filter::UrlPolicy;
 use crate::domain::page::Page;
 use crate::infrastructure::config::app_settings::AppSettings;
 use crate::infrastructure::http::page_fetcher::HttpPageFetcher;
@@ -16,7 +17,7 @@ use crate::presentation::webview_shell::templates::{
 use slint::winit_030::{EventResult, WinitWindowAccessor};
 use slint::{ComponentHandle, Timer, TimerMode};
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::event::WindowEvent;
@@ -34,6 +35,7 @@ pub fn run(
 
     let (preview_command_tx, preview_command_rx) = mpsc::channel();
     let (preview_result_tx, preview_result_rx) = mpsc::channel();
+    let (browser_event_tx, browser_event_rx) = mpsc::channel();
     spawn_preview_worker(preview_command_rx, preview_result_tx)?;
 
     let controller = Rc::new(RefCell::new(BrowserShellSlintController::new()));
@@ -46,6 +48,8 @@ pub fn run(
         settings,
         preview_command_tx,
         preview_result_rx,
+        browser_event_tx,
+        browser_event_rx,
         controller,
         bridge,
     )));
@@ -53,6 +57,7 @@ pub fn run(
     BrowserShellApp::install_window_hooks(&app);
     BrowserShellApp::install_action_pump(&app);
     BrowserShellApp::install_preview_pump(&app);
+    BrowserShellApp::install_browser_event_pump(&app);
     app.borrow_mut().sync_shell();
     app.borrow()
         .bridge
@@ -70,12 +75,16 @@ struct BrowserShellApp {
     settings: AppSettings,
     preview_command_tx: Sender<PreviewCommand>,
     preview_result_rx: Receiver<PreviewResult>,
+    browser_event_tx: Sender<BrowserEvent>,
+    browser_event_rx: Receiver<BrowserEvent>,
     controller: Rc<RefCell<BrowserShellSlintController>>,
     bridge: BrowserShellSlintBridge,
     shell_state: ShellState,
+    shared_policy: Rc<RefCell<crate::infrastructure::blocklist::file_blocklist_policy::FileBlocklistPolicy>>,
     content_webview: Option<WebView>,
     action_timer: Timer,
     preview_timer: Timer,
+    browser_event_timer: Timer,
 }
 
 impl BrowserShellApp {
@@ -85,22 +94,29 @@ impl BrowserShellApp {
         settings: AppSettings,
         preview_command_tx: Sender<PreviewCommand>,
         preview_result_rx: Receiver<PreviewResult>,
+        browser_event_tx: Sender<BrowserEvent>,
+        browser_event_rx: Receiver<BrowserEvent>,
         controller: Rc<RefCell<BrowserShellSlintController>>,
         bridge: BrowserShellSlintBridge,
     ) -> Self {
         let selected_profile = settings.blocklist_profile;
+        let shared_policy = Rc::new(RefCell::new(browser_service.url_policy()));
         Self {
             browser_service,
             runtime_config,
             settings,
             preview_command_tx,
             preview_result_rx,
+            browser_event_tx,
+            browser_event_rx,
             controller,
             bridge,
             shell_state: ShellState::new(selected_profile),
+            shared_policy,
             content_webview: None,
             action_timer: Timer::default(),
             preview_timer: Timer::default(),
+            browser_event_timer: Timer::default(),
         }
     }
 
@@ -127,7 +143,8 @@ impl BrowserShellApp {
 
             let actions = {
                 let controller = app.borrow().controller.clone();
-                controller.borrow_mut().drain_actions()
+                let actions = controller.borrow_mut().drain_actions();
+                actions
             };
 
             if actions.is_empty() {
@@ -155,6 +172,20 @@ impl BrowserShellApp {
         );
     }
 
+    fn install_browser_event_pump(app: &Rc<RefCell<Self>>) {
+        let weak = Rc::downgrade(app);
+        app.borrow().browser_event_timer.start(
+            TimerMode::Repeated,
+            std::time::Duration::from_millis(16),
+            move || {
+                let Some(app) = weak.upgrade() else {
+                    return;
+                };
+                app.borrow_mut().drain_browser_events();
+            },
+        );
+    }
+
     fn attach_content_after_show(app: &Rc<RefCell<Self>>) -> Result<(), String> {
         let app_window_weak = app.borrow().bridge.window().as_weak();
         let weak = Rc::downgrade(app);
@@ -168,8 +199,8 @@ impl BrowserShellApp {
                 return;
             };
 
-            if let Some(app) = weak.upgrade() {
-                let mut app = app.borrow_mut();
+            if let Some(app_rc) = weak.upgrade() {
+                let mut app = app_rc.borrow_mut();
                 if let Err(error) = app.attach_content_webview(winit_window.as_ref()) {
                     app.shell_state.status =
                         StatusPayload::warning(format!("Failed to attach WebView2 content: {error}"));
@@ -177,6 +208,7 @@ impl BrowserShellApp {
                 }
             }
         })
+        .map(|_| ())
         .map_err(|error| error.to_string())
     }
 
@@ -186,42 +218,42 @@ impl BrowserShellApp {
             return Ok(());
         }
 
-        let weak = Rc::downgrade(
-            &Rc::new(RefCell::new(())),
-        );
-        drop(weak);
-
-        let app_ptr = self as *mut Self;
-        let navigation_handler = move |url: String| unsafe {
-            let app = &mut *app_ptr;
-            let allowed = app.browser_service.url_policy().allows(url.as_str());
-            if !allowed {
-                app.handle_navigation_blocked(url.clone());
-            }
-            allowed
-        };
-
-        let app_ptr = self as *mut Self;
-        let title_handler = move |title: String| unsafe {
-            let app = &mut *app_ptr;
-            app.handle_title_changed(title);
-        };
-
-        let app_ptr = self as *mut Self;
-        let page_load_handler = move |event: wry::PageLoadEvent, url: String| unsafe {
-            let app = &mut *app_ptr;
-            match event {
-                wry::PageLoadEvent::Started => app.handle_navigation_started(url),
-                wry::PageLoadEvent::Finished => app.handle_navigation_finished(url),
-            }
-        };
-
+        let policy = Rc::clone(&self.shared_policy);
+        let browser_event_tx = self.browser_event_tx.clone();
         let content_webview = WebViewBuilder::new()
             .with_bounds(self.current_content_bounds(window))
             .with_html(placeholder_page_html())
-            .with_navigation_handler(navigation_handler)
-            .with_document_title_changed_handler(title_handler)
-            .with_on_page_load_handler(page_load_handler)
+            .with_navigation_handler({
+                let policy = Rc::clone(&policy);
+                let browser_event_tx = browser_event_tx.clone();
+                move |url| {
+                    let allowed = policy.borrow().allows(url.as_str());
+                    if !allowed {
+                        let _ = browser_event_tx
+                            .send(BrowserEvent::NavigationBlocked(url.to_string()));
+                    }
+                    allowed
+                }
+            })
+            .with_document_title_changed_handler({
+                let browser_event_tx = browser_event_tx.clone();
+                move |title| {
+                    let _ = browser_event_tx.send(BrowserEvent::TitleChanged(title));
+                }
+            })
+            .with_on_page_load_handler({
+                let browser_event_tx = browser_event_tx.clone();
+                move |event, url| {
+                    let _ = match event {
+                        wry::PageLoadEvent::Started => {
+                            browser_event_tx.send(BrowserEvent::PageLoadStarted(url))
+                        }
+                        wry::PageLoadEvent::Finished => {
+                            browser_event_tx.send(BrowserEvent::PageLoadFinished(url))
+                        }
+                    };
+                }
+            })
             .build_as_child(window)
             .map_err(|error| error.to_string())?;
 
@@ -321,6 +353,7 @@ impl BrowserShellApp {
         match build_blocklist_policy(&self.runtime_config, profile) {
             Ok(policy) => {
                 self.browser_service.replace_policy(policy);
+                *self.shared_policy.borrow_mut() = self.browser_service.url_policy();
                 self.settings.blocklist_profile = profile;
                 self.shell_state.selected_profile = profile.as_str().to_string();
                 self.shell_state.status = StatusPayload::success(format!(
@@ -477,6 +510,23 @@ impl BrowserShellApp {
                 PreviewResult::Failed { tab_id, url, error } => {
                     self.handle_preview_failed(tab_id, url, error)
                 }
+            }
+        }
+    }
+
+    fn drain_browser_events(&mut self) {
+        loop {
+            let next = match self.browser_event_rx.try_recv() {
+                Ok(result) => result,
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => break,
+            };
+
+            match next {
+                BrowserEvent::PageLoadStarted(url) => self.handle_navigation_started(url),
+                BrowserEvent::PageLoadFinished(url) => self.handle_navigation_finished(url),
+                BrowserEvent::NavigationBlocked(url) => self.handle_navigation_blocked(url),
+                BrowserEvent::TitleChanged(title) => self.handle_title_changed(title),
             }
         }
     }
@@ -737,6 +787,13 @@ struct PreviewCommand {
 enum PreviewResult {
     Loaded { tab_id: u32, url: String, page: Page },
     Failed { tab_id: u32, url: String, error: String },
+}
+
+enum BrowserEvent {
+    PageLoadStarted(String),
+    PageLoadFinished(String),
+    NavigationBlocked(String),
+    TitleChanged(String),
 }
 
 #[derive(Clone, Copy)]
