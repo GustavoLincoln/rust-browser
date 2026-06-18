@@ -3,21 +3,11 @@ mod domain;
 mod infrastructure;
 mod presentation;
 
-use application::browser_service::BrowserService;
+use application::runtime::{bootstrap_browser_service, RuntimeConfig};
 
-fn main() {
-    let blocklist_path = "blocklist.txt";
-
-    match BrowserService::bootstrap(blocklist_path) {
-        Ok(mut service) => {
-            let urls = [
-                "https://google.com",
-                "http://malware-site.ru",
-                "invalid_url",
-            ];
-
-            presentation::cli::run_simulation(&mut service, &urls);
-        }
-        Err(error) => eprintln!("Failed to initialize browser: {error}"),
-    }
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = RuntimeConfig::from_env();
+    let browser_service = bootstrap_browser_service(&config).map_err(std::io::Error::other)?;
+    presentation::webview_shell::runner::run(browser_service).map_err(std::io::Error::other)?;
+    Ok(())
 }
