@@ -1,5 +1,31 @@
 import { Button, LineEdit, HorizontalBox, VerticalBox } from "std-widgets.slint";
 
+component TitlebarButton inherits Rectangle {
+    in property <string> label: "";
+    in property <bool> danger: false;
+    callback pressed();
+
+    min-width: 44px;
+    min-height: 36px;
+    border-radius: 10px;
+    background: danger ? #7a2e2e : #2f3a45;
+
+    Text {
+        text: label;
+        color: #f8fafc;
+        font-size: 14px;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        width: parent.width;
+        height: parent.height;
+    }
+
+    TouchArea {
+        clicked => { root.pressed(); }
+    }
+}
+
 export component AppWindow inherits Window {
     in property <string> window_title: "Rust Browser";
     in property <string> address_value: "";
@@ -59,7 +85,7 @@ export component AppWindow inherits Window {
                         spacing: 10px;
 
                         Rectangle {
-                            background: #ffffff;
+                            background: #2f3a45;
                             border-radius: 14px;
                             min-width: 300px;
                             horizontal-stretch: 1;
@@ -75,44 +101,41 @@ export component AppWindow inherits Window {
                                     spacing: 2px;
                                     Text {
                                         text: active_tab_title;
-                                        color: #1f2933;
+                                        color: #f8fafc;
                                         font-size: 13px;
                                         font-weight: 700;
                                     }
                                     Text {
                                         text: active_tab_url;
-                                        color: #5f6b76;
+                                        color: #cbd5e1;
                                         font-size: 11px;
                                     }
                                 }
                             }
                         }
 
-                        Button {
-                            text: "+";
-                            min-width: 44px;
-                            clicked => { root.create_tab(); }
+                        TitlebarButton {
+                            label: "+";
+                            pressed => { root.create_tab(); }
                         }
 
                         HorizontalBox {
                             spacing: 6px;
 
-                            Button {
-                                text: "_";
-                                min-width: 44px;
-                                clicked => { root.minimize_window(); }
+                            TitlebarButton {
+                                label: "_";
+                                pressed => { root.minimize_window(); }
                             }
 
-                            Button {
-                                text: "[ ]";
-                                min-width: 44px;
-                                clicked => { root.maximize_window(); }
+                            TitlebarButton {
+                                label: "[]";
+                                pressed => { root.maximize_window(); }
                             }
 
-                            Button {
-                                text: "X";
-                                min-width: 44px;
-                                clicked => { root.close_window(); }
+                            TitlebarButton {
+                                label: "X";
+                                danger: true;
+                                pressed => { root.close_window(); }
                             }
                         }
                     }
